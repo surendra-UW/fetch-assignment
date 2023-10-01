@@ -1,0 +1,59 @@
+1.Why did you choose the tools, libraries, and language you used for the coding exercise?
+
+I have used python with flask to build th REST API's. Python as a language because it is dynamically 
+typed and it has lot of inbuilt functions and datastructures. Also, its easy to start with while building projects 
+compared to something like Java and springboot. I have done lot of work on Java and spring boot and they offer 
+a lot of features for REST API's like integration with db orm framework JPA, easy integration with swagger 
+and lots of libraries and best collections framework (list, set and maps). But, python is light weight when 
+comes to setting up simple projects. All cloud systems lke AWS, Azure support support python for deployments and Lambda's
+
+Libraries used are flask, sqlite and datetime.
+flask - a framework to develop REST API'
+sqlite - a in memory database just for the sake of testing which comes integrated with python 
+datetime - to validate the timestamp format provided to the /add api
+
+As this a just a simple api I havent used any tools as such but as an extension we can orm frameworks to map 
+data objects to database which is a robust way to deal with queries.
+
+2.What are the advantages and disadvantages of your solution?
+
+Advantages:
+
+The solution I have provided is very extensible, we can add userId coulumsn in the database and the API's can be extended to 
+all the users. The entire history of transactiosn is mainted in the REWARDS table and the redeemed rewards are not deleted from the table 
+but just marked as inactive which can later be purged using the active and timestamp column.
+Some databases like Dynamo db provides auto delete feature as well by setting up policies or even moved to different levels of S3 
+storages which are cheap and if user wants to retrieve the history can easily be extracted.
+The spend api is implemented in such a way that if an database error occurs the transaction is not committed and no data loss occurs
+
+In the spend rewards api we make 2 calls one to retrieve the total_points available to redeem and the other call was to start redeeming 
+This can be reduced to single call whic fetches the entore set of records and processes. Its a trade of, depending on the amoount of data 
+we have in database and number of times the api is being used with insuffiecient rewards.
+
+Disadvantages:
+
+The problem that can arise because of maintaining the entire data in single table is the scans can take time, which can be countered
+by creating indexes and partioning the data (No SQL) or even moving out the historical records.
+
+Improvements:
+
+The other improvements that can be suggested are using a cache to speed up the performance of the apis.
+If we are planning to host the apis as a microservice we could user a pool of db connections
+Add logs in the code to debug if any issue arise
+Use soe RDMS server or No SQL db server rather than in memory db
+
+3. What has been a favorite school/personal project thus far? What about it that challenged you?
+
+I will describe about a project I have done when I was working at JP Morgan Chase & Co PRADA. The project is about remodelling the 
+existing data model and build a new version for one particular seection of the application.
+The application is huge and offers lots of feature and this project is about redesigning one of the tasks the app performs.
+The difficulties of the project lies in the facts that 
+a. It involves many micro-services and micro-services is handled by a particular team and its needs to be coordinated well
+b. The existing model should run in parellel to the new model and a beta version of app should be released with new features.
+c. The project has a strict deadline and needs to be delievered in time.
+
+While developing for this project I took the lead coordinated among the teams and assigned works for my teamates.
+Defined and finetuned the requirements. I have put in a lot of effort to develop and review the code and streamline the 
+project so that the project was successful and deployed to production in time which is being used currently in JP Morgan
+and all the new integrations were routed through the new model. I have learnt a lot from this project both technical as well 
+as managing relationships among team.

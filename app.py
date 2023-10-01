@@ -27,14 +27,18 @@ def add_reward():
 @app.route("/spend", methods=["POST"])
 def spend_rewards():
     input = request.get_json(force=True)
-    if input["points"] <= 0:
-        return build_response(400, "Bad Request points to redeem should be posivite")
+    try: 
+        if input["points"] <= 0:
+            return build_response(400, "Bad Request points to redeem should be posivite")
     
-    response = RewardService.spend_rewards(input["points"])
-    if response['status'] == "Not Enough":
-        return build_response(400, "user doesn’t have enough points")
-    return build_response(200, response['spend_summary'])
-
+        response = RewardService.spend_rewards(input["points"])
+        if response['status'] == "Not Enough":
+            return build_response(400, "user doesn’t have enough points")
+        return build_response(200, response['spend_summary'])
+    except Exception as exception:
+        return build_response(500, f"exception occured while processing spend rewards {exception}")
+ 
+    
 
 @app.route("/balance", methods=["GET"])
 def balance():
@@ -57,4 +61,4 @@ def build_response(status_code, response):
     return response
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8000, debug=True)
+    app.run(host="localhost", port=8000, debug=False)
