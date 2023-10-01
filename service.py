@@ -9,7 +9,6 @@ class RewardService:
     @classmethod
     def spend_rewards(cls, points):
         total_points = RewardDao.get_total_points()
-        print("total poinst ", total_points)
         if total_points == None or total_points < points:
             return {"spend_summary" : None, "status": "Not Enough"}
 
