@@ -11,7 +11,7 @@ RewardDao.initialize_db()
 def add_reward():
     input = request.get_json(force=True)
 
-    if input['payer'].isspace(): 
+    if input['payer'].strip() == "": 
         return build_response(400, "Bad request empty payer name")
     if not is_valid_date(input['timestamp'], "%Y-%m-%dT%H:%M:%SZ"):
         return build_response(400, "Bad request improper date format")
@@ -23,21 +23,17 @@ def add_reward():
         return build_response(500, f"exception occured while adding reward {exception}")
 
     return build_response(200, "Successfuly added the reward")
-
-def is_valid_date(date_string, format):
-    try:
-        datetime.strptime(date_string, format)
-        return True
-    except ValueError:
-        return False
     
 @app.route("/spend", methods=["POST"])
 def spend_rewards():
     input = request.get_json(force=True)
+    if input["points"] <= 0:
+        return build_response(400, "Bad Request points to redeem should be posivite")
+    
     response = RewardService.spend_rewards(input["points"])
-    if response[0] == "Not Enough":
+    if response['status'] == "Not Enough":
         return build_response(400, "user doesn’t have enough points")
-    return build_response(200, response)
+    return build_response(200, response['spend_summary'])
 
 
 @app.route("/balance", methods=["GET"])
@@ -48,6 +44,12 @@ def balance():
         return build_response(500, "Exception occured {}".format(exception))
     return build_response(200, balance)
 
+def is_valid_date(date_string, format):
+    try:
+        datetime.strptime(date_string, format)
+        return True
+    except ValueError:
+        return False
 
 def build_response(status_code, response):
     response = app.make_response(response)
@@ -55,4 +57,4 @@ def build_response(status_code, response):
     return response
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8000, debug=False)
+    app.run(host="localhost", port=8000, debug=True)

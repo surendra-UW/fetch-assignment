@@ -23,7 +23,7 @@ class RewardDao:
             c = connection.cursor()
             c.execute(
                 "INSERT INTO rewards (payer, points, timestamp, active) VALUES (?,?,?,?)",
-                    reward,
+                    (reward.payer, reward.points, reward.timestamp, reward.active)
                 )
             connection.commit()
 
@@ -37,7 +37,7 @@ class RewardDao:
         return transaction_history
     
     @classmethod
-    def update_active_records(cls):
+    def update_active_records(cls, points_to_spend):
         with sqlite3.connect("database.db") as connection:
             c = connection.cursor()
             c.execute("SELECT rowid, payer, points FROM rewards WHERE active = ? ORDER BY timestamp ASC", (1,))
@@ -47,25 +47,26 @@ class RewardDao:
             for record in transaction_history:
                 rowid, payer, points = record
                 current_points = current_points + points
-                if current_points <= points:
-                    RewardDao().__deduct_points(rewards_to_use, payer, points)
+                if current_points <= points_to_spend:
+                    RewardDao().__update_spend_summary(rewards_to_use, payer, points)
                     c.execute(
                         "UPDATE rewards SET active = ? WHERE rowid = ?", (0, rowid)
                     )
                 else:
-                    points_to_deduct = points - (current_points - points)
-                    RewardDao().__deduct_points(rewards_to_use, payer, points_to_deduct)
+                    points_to_deduct = points - (current_points - points_to_spend)
+                    RewardDao().__update_spend_summary(rewards_to_use, payer, points_to_deduct)
                     c.execute(
-                        "UPDATE rewards SET points = ? WHERE rowid = ?", (current_points - points, rowid)
+                        "UPDATE rewards SET points = ? WHERE rowid = ?", (current_points - points_to_spend, rowid)
                     )
 
-                if current_points >= points:
+                if current_points >= points_to_spend:
                     break
             connection.commit()
 
         return rewards_to_use
     
-    def __deduct_points (self, rewards_to_use, payer, points_to_deduct) -> None:
+    def __update_spend_summary(self, rewards_to_use, payer, points_to_deduct) -> None:
+        print("rewards summary {}", rewards_to_use)
         if rewards_to_use.get(payer) == None:
             rewards_to_use[payer] = -points_to_deduct
         else:
@@ -96,6 +97,6 @@ class RewardDao:
     @classmethod
     def get_total_points(cls):
         with sqlite3.connect("database.db") as connection:
-            c = connection.cursor
+            c = connection.cursor()
             c.execute("SELECT SUM(points) FROM rewards WHERE active = ?", (1,))
             return c.fetchone()[0]
