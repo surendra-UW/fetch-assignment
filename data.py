@@ -37,47 +37,24 @@ class RewardDao:
         return transaction_history
     
     @classmethod
-    def update_active_records(cls, points_to_spend):
+    def retrieve_active_records(cls, connection):
         with sqlite3.connect("database.db") as connection:
             c = connection.cursor()
             c.execute("SELECT rowid, payer, points FROM rewards WHERE active = ? ORDER BY timestamp ASC", (1,))
             transaction_history = c.fetchall()
-            current_points = 0
-            rewards_to_use = {}
-            for record in transaction_history:
-                rowid, payer, points = record
-                current_points = current_points + points
-                if current_points <= points_to_spend:
-                    RewardDao().__update_spend_summary(rewards_to_use, payer, points)
-                    c.execute(
-                        "UPDATE rewards SET active = ? WHERE rowid = ?", (0, rowid)
-                    )
-                else:
-                    points_to_deduct = points - (current_points - points_to_spend)
-                    RewardDao().__update_spend_summary(rewards_to_use, payer, points_to_deduct)
-                    c.execute(
-                        "UPDATE rewards SET points = ? WHERE rowid = ?", (current_points - points_to_spend, rowid)
-                    )
-
-                if current_points >= points_to_spend:
-                    break
-            connection.commit()
-
-        return rewards_to_use
-    
-    def __update_spend_summary(self, rewards_to_use, payer, points_to_deduct) -> None:
-        print("rewards summary {}", rewards_to_use)
-        if rewards_to_use.get(payer) == None:
-            rewards_to_use[payer] = -points_to_deduct
-        else:
-            rewards_to_use[payer] = rewards_to_use[payer] - points_to_deduct
+        return transaction_history
 
     @classmethod
-    def update_points(cls, points, rowid):
-        with sqlite3.connect("database.db") as connection:
-            c = connection.cursor()
-            c.execute('UPDATE rewards SET points = ? WHERE rowid = ?', (points, rowid))
-            transaction_history = c.fetchall()
+    def update_points(cls, points, rowid, connection):
+        c = connection.cursor()
+        c.execute('UPDATE rewards SET points = ? WHERE rowid = ?', (points, rowid))
+
+    @classmethod
+    def update_status(cls, active, rowid, connection):
+        c = connection.cursor()
+        c.execute(
+                        "UPDATE rewards SET active = ? WHERE rowid = ?", (0, rowid)
+                    )
 
     @classmethod
     def initialize_db(cls):
